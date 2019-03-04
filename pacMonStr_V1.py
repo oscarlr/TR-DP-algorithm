@@ -40,36 +40,37 @@ def tb_prefix(query,prefix,P,P_p,iPre):
     qList = []
     preList= []
     jLessThanZero = False
+    #print i,j
     while(j > 0):
-      if j > 0: 
-         if (P[i][j] > 0):
-            if (P_p[i][j] == 0):
-               qList.append(qSeq[i-1])
-               preList.append(preSeq[j-1])
-               i += -1
-               j += -1
-            if (P_p[i][j] == 1):
-               qList.append(qSeq[i-1])
-               preList.append("-")
-               i += -1
-            if (P_p[i][j] == 2):
-               qList.append("-")
-               preList.append(preSeq[j-1])
-               j += -1
-         else:
+        if j > 0: 
+            if (P[i][j] > 0):
+                if (P_p[i][j] == 0):
+                    qList.append(qSeq[i-1])
+                    preList.append(preSeq[j-1])
+                    i += -1
+                    j += -1
+                if (P_p[i][j] == 1):
+                    qList.append(qSeq[i-1])
+                    preList.append("-")
+                    i += -1
+                if (P_p[i][j] == 2):
+                    qList.append("-")
+                    preList.append(preSeq[j-1])
+                    j += -1
+            else:
+                jLessThanZero = True
+                break
+        else:
             jLessThanZero = True
             break
-      else:
-         jLessThanZero = True
-         break
     if jLessThanZero == False:
-       preList.reverse()
-       qList.reverse()
-       q_pre_Aligned = []
-       q_pre_Aligned.append(''.join(preList))
-       q_pre_Aligned.append(''.join(qList))
+        preList.reverse()
+        qList.reverse()
+        q_pre_Aligned = []
+        q_pre_Aligned.append(''.join(preList))
+        q_pre_Aligned.append(''.join(qList))
     else:
-       q_pre_Aligned = ['','']
+        q_pre_Aligned = ['','']
     return q_pre_Aligned
 
 def tb_suffix(query,suffix,S,S_p):
@@ -248,7 +249,7 @@ def finalTrace(qArray,tR,T,T_p,tR_rowMax,index_i_tR):
                scoretRexit = T[i+1][j]
           else:
               trScoreNeg = True
-              print "Tandem repeat score <= 0"
+              #print "Tandem repeat score <= 0"
               break
         else:
             trScoreNeg = True
@@ -411,9 +412,10 @@ def alignRegions(query,pre_suf_tR):
     tR_maxScore = 0
     repeatAligned = []
     number_tR, repeatAligned, tR_maxScore, tR_exitScore, naiveTR = finalTrace(query,tR,tRScore,tRMaxScore,tR_rowMax,index_i_tR) #Traceback from the suffix matrix, S and into TR repeat matrix, R 
-
+    if number_tR < 0:
+        return None,None,None,None
     alignPrfxQ = tb_prefix(query,pArray,preScore,preMaxScore,Prefix_BestScoreIndex) #Here goes the prefix matrix traceback. here query is in int, but tR is in string representation
-    print "exit finalTrace..."
+    #print "exit finalTrace..."
     return number_tR, repeatAligned, alignSufxQ, alignPrfxQ
 
 
@@ -433,10 +435,12 @@ if __name__ == '__main__':
     assert len(query) == len(tr)
 
     for i,(q,p,s,t) in enumerate(zip(query,prefix,suffix,tr)):
-        q_seq = map(ord,q.seq)
+        q_seq = map(ord,str(q.seq).upper())
         q_seq = np.asarray(q_seq)
-        p_s_t = [p.seq,s.seq,t.seq]
+        p_s_t = [str(p.seq).upper(),str(s.seq).upper(),str(t.seq).upper()]
         number_of_tr, repeat_aligned, suffix_aligned, prefix_aligned = alignRegions(q_seq,p_s_t) 
+        if number_of_tr == None:
+            continue
         out = [i,q.id,t.id,t.seq,number_of_tr,
                repeat_aligned[0],repeat_aligned[1],
                suffix_aligned[0],suffix_aligned[1],
